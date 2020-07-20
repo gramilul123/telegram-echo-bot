@@ -9,7 +9,7 @@ import (
 	botclien "github.com/gramilul123/telegram-echo-bot/tgbotapi"
 )
 
-func listenWebhook(w http.ResponseWriter, r *http.Request) {
+func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	bytes, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	var update tgbotapi.Update
