@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	botclien "github.com/gramilul123/telegram-echo-bot/tgbotapi"
+	"github.com/gramilul123/telegram-echo-bot/client"
 )
 
 func ListenWebhook(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +18,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 	msg.ReplyToMessageID = update.Message.MessageID
 
-	bot := botclien.TgBot{}.Client
-	bot.Send(msg)
+	bot := client.TgBot{}
+	bot.Init()
+	bot.Client.Send(msg)
 }

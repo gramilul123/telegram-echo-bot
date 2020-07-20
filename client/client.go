@@ -1,4 +1,4 @@
-package tgbotapi
+package client
 
 import (
 	"fmt"
@@ -24,16 +24,25 @@ func (bot *TgBot) Init() {
 func (bot *TgBot) SetWebhook() {
 	bot.Init()
 
-	_, bot.Err = bot.Client.SetWebhook(tgbotapi.NewWebhook(fmt.Sprintf("https://%s:%s/%s", configs.GetConfig().URL, configs.GetConfig().Port, configs.GetConfig().Token)))
+	_, bot.Err = bot.Client.SetWebhook(tgbotapi.NewWebhook(fmt.Sprintf("https://%s/%s", configs.GetConfig().URL, configs.GetConfig().Token)))
 	if bot.Err != nil {
 		log.Fatal(bot.Err)
 	}
 	bot.GetWebhookInfo()
 }
 
-func (bot *TgBot) GetWebhookInfo() {
-	_, bot.Err = bot.Client.GetWebhookInfo()
+func (bot *TgBot) GetWebhookInfo() tgbotapi.WebhookInfo {
+	var info tgbotapi.WebhookInfo
+
+	info, bot.Err = bot.Client.GetWebhookInfo()
+
 	if bot.Err != nil {
 		log.Fatal(bot.Err)
 	}
+
+	if info.LastErrorDate != 0 {
+		log.Fatal("Telegram callback failed: %s", info.LastErrorMessage)
+	}
+
+	return info
 }

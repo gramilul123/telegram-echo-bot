@@ -9,10 +9,8 @@ import (
 )
 
 type Config struct {
-	URL     string `yaml:"url"`
-	Token   string `yaml:"token"`
-	LogFile string `yaml:"logfile"`
-	Port    string `yaml:"port"`
+	URL   string `yaml:"url"`
+	Token string `yaml:"token"`
 }
 
 var clientConfig *Config
@@ -38,10 +36,6 @@ func GetConfig() *Config {
 		}
 
 		clientConfig = &configData
-
-		if clientConfig.Port == "" {
-			clientConfig.Port = os.Getenv("PORT")
-		}
 	})
 
 	return clientConfig

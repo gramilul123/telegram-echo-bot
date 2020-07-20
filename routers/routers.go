@@ -9,9 +9,9 @@ import (
 
 func Init() {
 	http.HandleFunc("/"+configs.GetConfig().Token, func(w http.ResponseWriter, r *http.Request) {
-		controllers.SetWebhook(w, r)
+		controllers.ListenWebhook(w, r)
 	})
 	http.HandleFunc("/set_webhook", func(w http.ResponseWriter, r *http.Request) {
-		controllers.ListenWebhook(w, r)
+		controllers.SetWebhook(w, r)
 	})
 }
