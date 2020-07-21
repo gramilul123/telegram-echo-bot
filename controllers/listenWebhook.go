@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -17,15 +17,47 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	var update tgbotapi.Update
 	json.Unmarshal(bytes, &update)
 
-	exampleQuery := "hello, world"
+	/*exampleQuery := "hello, world"
 	markup := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.InlineKeyboardButton{
-				Text:         "Try it 11",
+				Text:         "1",
 				CallbackData: &exampleQuery,
 			},
 			tgbotapi.InlineKeyboardButton{
-				Text:         "Try it 12",
+				Text:         "2",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "3",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "4",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "5",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "6",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "7",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "8",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "9",
+				CallbackData: &exampleQuery,
+			},
+			tgbotapi.InlineKeyboardButton{
+				Text:         "10",
 				CallbackData: &exampleQuery,
 			},
 		),
@@ -39,7 +71,53 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 				CallbackData: &exampleQuery,
 			},
 		),
-	)
+	)*/
+	//markup := tgbotapi.NewInlineKeyboardMarkup()
+	/*brows := []tgbotapi.NewInlineKeyboardRow{}
+	for i := 1; i <= 10; i++ {
+		brow := []tgbotapi.InlineKeyboardButton{}
+		for j := 1; j <= 10; j++ {
+			callbackText := fmt.Sprintf("%v-%v", i, j)
+			brow = append(brow, tgbotapi.InlineKeyboardButton{
+				Text:         callbackText,
+				CallbackData: &callbackText,
+			})
+		}
+		brows = append(brows, brow)
+		//markup = tgbotapi.NewInlineKeyboardMarkup(brow)
+	}
+	log.Println(brows)
+	markup := tgbotapi.NewInlineKeyboardMarkup(brows)*/
+
+	/*btn := tgbotapi.KeyboardButton{
+		Text: "",
+	}
+
+
+	markup := tgbotapi.NewReplyKeyboard(
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn},
+		[]tgbotapi.KeyboardButton{btn, btn, btn, btn, btn, btn, btn, btn, btn, btn})*/
+
+	brows := [][]tgbotapi.KeyboardButton{}
+	for i := 1; i <= 10; i++ {
+		brow := []tgbotapi.KeyboardButton{}
+		for j := 1; j <= 10; j++ {
+			text := fmt.Sprintf("%v-%v", i, j)
+			brow = append(brow, tgbotapi.KeyboardButton{
+				Text: text,
+			})
+		}
+		brows = append(brows, brow)
+	}
+	markup := tgbotapi.NewReplyKeyboard(brows...)
 
 	if update.Message != nil {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "hello, world!")
@@ -49,7 +127,10 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 		bot.Init()
 		bot.Client.Send(msg)
 	} else {
-		log.Println(update.CallbackQuery.Message.Text)
+		msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.Text)
+		bot := client.TgBot{}
+		bot.Init()
+		bot.Client.Send(msg)
 	}
 
 }
