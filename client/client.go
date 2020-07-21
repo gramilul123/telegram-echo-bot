@@ -18,7 +18,10 @@ func (bot *TgBot) Init() {
 	if bot.Err != nil {
 		log.Fatal(bot.Err)
 	}
-	bot.Client.Debug = true
+
+	if configs.GetConfig().Debug == "Y" {
+		bot.Client.Debug = true
+	}
 }
 
 func (bot *TgBot) SetWebhook() {

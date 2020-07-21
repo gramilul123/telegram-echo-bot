@@ -11,6 +11,7 @@ import (
 type Config struct {
 	URL   string `yaml:"url"`
 	Token string `yaml:"token"`
+	Debug string `yaml:"debug"`
 }
 
 var clientConfig *Config
