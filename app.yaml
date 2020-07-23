@@ -1,1 +1,8 @@
-runtime: go113 # replace with go111 for Go 1.11
+runtime: go113
+
+env_variables:
+  CLOUDSQL_CONNECTION_NAME:
+  CLOUDSQL_USER: 
+  CLOUDSQL_PASSWORD:
+  CLOUDSQL_SOCKET_PREFIX:
+  CLOUDSQL_DATABASE_NAME:
