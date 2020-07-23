@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -56,4 +58,47 @@ func Query(query string) *sql.Rows {
 	defer rows.Close()
 
 	return rows
+}
+
+func CreateTable(model interface{}) bool {
+	query := getTableCreationRequest(model)
+	_, err := GetDBConnect().DB.Exec(query)
+	if err != nil {
+		log.Fatalf("Could not query db: %v", err)
+	}
+
+	return true
+}
+
+func getTableCreationRequest(model interface{}) string {
+	queryFields := []string{}
+	queryPrimary := []string{}
+	varFullName := reflect.ValueOf(model).Type().String()
+	varSlice := strings.Split(varFullName, ".")
+	query := "CREATE TABLE IF NOT EXISTS " + varSlice[len(varSlice)-1]
+	val := reflect.ValueOf(model).Elem()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Type().Field(i)
+		tableField := ""
+		switch field.Type.String() {
+		case "string":
+			tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("field"), field.Tag.Get("len"))
+		case "int":
+			tableField = field.Tag.Get("field") + " INT NOT NULL default 0"
+		}
+		queryFields = append(queryFields, tableField)
+
+		if field.Tag.Get("key") == "primary" {
+			queryPrimary = append(queryPrimary, field.Tag.Get("field"))
+		}
+
+	}
+
+	if len(queryPrimary) > 0 {
+		tablePrimary := fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(queryPrimary, ","))
+		queryFields = append(queryFields, tablePrimary)
+	}
+
+	return fmt.Sprintf("%s (%s)", query, strings.Join(queryFields, ", "))
 }
