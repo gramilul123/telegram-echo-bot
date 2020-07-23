@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type DBConnect struct {
@@ -30,6 +32,7 @@ func GetDBConnect() *DBConnect {
 		connect = &DBConnect{}
 
 		dbURI := fmt.Sprintf("%s:%s@unix(%s/%s)/%s", user, password, socket, connectionName, dbName)
+		log.Println(dbURI)
 
 		if connect.DB, connect.Error = sql.Open("mysql", dbURI); connect.Error != nil {
 			panic(fmt.Sprintf("DB: %v", connect.Error))
