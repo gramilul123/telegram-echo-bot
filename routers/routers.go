@@ -14,4 +14,7 @@ func Init() {
 	http.HandleFunc("/set_webhook", func(w http.ResponseWriter, r *http.Request) {
 		controllers.SetWebhook(w, r)
 	})
+	http.HandleFunc("/create_table", func(w http.ResponseWriter, r *http.Request) {
+		controllers.CreateTable(w, r)
+	})
 }

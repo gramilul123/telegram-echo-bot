@@ -5,8 +5,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gramilul123/telegram-echo-bot/db"
 	"github.com/gramilul123/telegram-echo-bot/routers"
 )
+
+func init() {
+	db.GetDBConnect()
+}
 
 func main() {
 	routers.Init()
