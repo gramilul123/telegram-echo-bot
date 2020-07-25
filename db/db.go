@@ -63,23 +63,55 @@ func Query(query string) *sql.Rows {
 	return rows
 }
 
-func CreateTable(model interface{}) bool {
+func CreateTable(model interface{}) {
 	query := getTableCreationRequest(model)
 	_, err := GetDBConnect().DB.Exec(query)
 	if err != nil {
 		log.Fatalf("Could not query db: %v", err)
 	}
+}
 
-	return true
+func Insert(object interface{}) {
+	var model, query string
+	insertMap := make(map[string]interface{})
+
+	reflectValue := reflect.ValueOf(object)
+	varFullName := reflectValue.Type().String()
+	varSlice := strings.Split(varFullName, ".")
+	model = varSlice[len(varSlice)-1]
+
+	for i := 0; i < reflectValue.NumField(); i++ {
+		field := reflectValue.Type().Field(i)
+
+		if len(field.Tag.Get("field")) > 0 {
+			insertMap[field.Tag.Get("field")] = reflectValue.Field(i).Interface()
+		}
+	}
+
+	setList := []string{}
+	for field, value := range insertMap {
+		switch value.(type) {
+		case int:
+			setList = append(setList, fmt.Sprintf("%s=%d", field, value))
+		case string:
+			setList = append(setList, fmt.Sprintf("%s='%s'", field, value))
+		}
+	}
+	query = fmt.Sprintf("INSERT INTO %s SET %s;", model, strings.Join(setList, ", "))
+	_, err := GetDBConnect().DB.Exec(query)
+
+	if err != nil {
+		log.Fatalf("Could not query db: %v", err)
+	}
 }
 
 func getTableCreationRequest(model interface{}) string {
-	queryFields := []string{}
-	queryPrimary := []string{}
-	varFullName := reflect.ValueOf(model).Type().String()
+	var queryFields, queryPrimary []string
+	reflectValue := reflect.ValueOf(model)
+	varFullName := reflectValue.Type().String()
 	varSlice := strings.Split(varFullName, ".")
-	query := "CREATE TABLE IF NOT EXISTS " + varSlice[len(varSlice)-1]
-	val := reflect.ValueOf(model).Elem()
+	query := fmt.Sprintf("DROP TABLE IF EXISTS %s; CREATE TABLE %s", varSlice[len(varSlice)-1], varSlice[len(varSlice)-1])
+	val := reflectValue.Elem()
 
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Type().Field(i)
@@ -88,7 +120,11 @@ func getTableCreationRequest(model interface{}) string {
 		case "string":
 			tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("field"), field.Tag.Get("len"))
 		case "int":
-			tableField = field.Tag.Get("field") + " INT NOT NULL default 0"
+			if field.Tag.Get("extra") == "AUTO_INCREMENT" {
+				tableField = fmt.Sprintf("%s INT %s", field.Tag.Get("field"), field.Tag.Get("extra"))
+			} else {
+				tableField = fmt.Sprintf("%s INT NOT NULL default 0", field.Tag.Get("field"))
+			}
 		}
 		queryFields = append(queryFields, tableField)
 
@@ -99,9 +135,9 @@ func getTableCreationRequest(model interface{}) string {
 	}
 
 	if len(queryPrimary) > 0 {
-		tablePrimary := fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(queryPrimary, ","))
+		tablePrimary := fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(queryPrimary, ", "))
 		queryFields = append(queryFields, tablePrimary)
 	}
 
-	return fmt.Sprintf("%s (%s)", query, strings.Join(queryFields, ", "))
+	return fmt.Sprintf("%s (%s) ENGINE=InnoDB DEFAULT CHARSET=utf8;", query, strings.Join(queryFields, ", "))
 }
