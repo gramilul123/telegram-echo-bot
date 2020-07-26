@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -10,10 +9,11 @@ import (
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
 
 type DBConnect struct {
-	DB    *sql.DB
+	DB    *sqlx.DB
 	Error error
 }
 
@@ -34,7 +34,7 @@ func GetDBConnect() *DBConnect {
 		dbURI := fmt.Sprintf("%s:%s@unix(%s/%s)/%s", user, password, socket, connectionName, dbName)
 		log.Println(dbURI)
 
-		if connect.DB, connect.Error = sql.Open("mysql", dbURI); connect.Error != nil {
+		if connect.DB, connect.Error = sqlx.Connect("mysql", dbURI); connect.Error != nil {
 			panic(fmt.Sprintf("DB: %v", connect.Error))
 		}
 	})
@@ -52,28 +52,22 @@ func getEnv(key string) string {
 	return value
 }
 
-func Query(query string) *sql.Rows {
-	rows, err := GetDBConnect().DB.Query(query)
-
-	if err != nil {
-		log.Fatalf("Could not query db: %v", err)
-	}
-	defer rows.Close()
-
-	return rows
-}
-
 func CreateTable(model interface{}) {
 	query := getTableCreationRequest(model)
-	_, err := GetDBConnect().DB.Exec(query)
-	if err != nil {
-		log.Fatalf("Could not query db: %v", err)
-	}
+	GetDBConnect().DB.MustExec(query)
 }
 
 func Insert(object interface{}) {
-	var model, query string
-	insertMap := make(map[string]interface{})
+	query := getInsertRequest(object)
+	tx := GetDBConnect().DB.MustBegin()
+	tx.NamedExec(query, object)
+	tx.Commit()
+
+}
+
+func getInsertRequest(object interface{}) string {
+	var model string
+	var insertMap, valueMap []string
 
 	reflectValue := reflect.ValueOf(object)
 	varFullName := reflectValue.Type().String()
@@ -83,26 +77,16 @@ func Insert(object interface{}) {
 	for i := 0; i < reflectValue.NumField(); i++ {
 		field := reflectValue.Type().Field(i)
 
-		if len(field.Tag.Get("field")) > 0 {
-			insertMap[field.Tag.Get("field")] = reflectValue.Field(i).Interface()
+		if len(field.Tag.Get("db")) > 0 {
+			insertMap = append(insertMap, field.Tag.Get("db"))
 		}
 	}
 
-	setList := []string{}
-	for field, value := range insertMap {
-		switch value.(type) {
-		case int:
-			setList = append(setList, fmt.Sprintf("%s=%d", field, value))
-		case string:
-			setList = append(setList, fmt.Sprintf("%s='%s'", field, value))
-		}
+	for _, value := range insertMap {
+		valueMap = append(valueMap, ":"+value)
 	}
-	query = fmt.Sprintf("INSERT INTO %s SET %s;", model, strings.Join(setList, ", "))
-	_, err := GetDBConnect().DB.Exec(query)
 
-	if err != nil {
-		log.Fatalf("Could not query db: %v", err)
-	}
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", model, strings.Join(insertMap, ", "), strings.Join(valueMap, ", "))
 }
 
 func getTableCreationRequest(model interface{}) string {
@@ -110,7 +94,7 @@ func getTableCreationRequest(model interface{}) string {
 	reflectValue := reflect.ValueOf(model)
 	varFullName := reflectValue.Type().String()
 	varSlice := strings.Split(varFullName, ".")
-	query := fmt.Sprintf("DROP TABLE IF EXISTS %s; CREATE TABLE %s", varSlice[len(varSlice)-1], varSlice[len(varSlice)-1])
+	query := fmt.Sprintf("CREATE TABLE %s", varSlice[len(varSlice)-1])
 	val := reflectValue.Elem()
 
 	for i := 0; i < val.NumField(); i++ {
@@ -118,18 +102,18 @@ func getTableCreationRequest(model interface{}) string {
 		tableField := ""
 		switch field.Type.String() {
 		case "string":
-			tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("field"), field.Tag.Get("len"))
+			tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("db"), field.Tag.Get("len"))
 		case "int":
 			if field.Tag.Get("extra") == "AUTO_INCREMENT" {
-				tableField = fmt.Sprintf("%s INT %s", field.Tag.Get("field"), field.Tag.Get("extra"))
+				tableField = fmt.Sprintf("%s INT %s", field.Tag.Get("db"), field.Tag.Get("extra"))
 			} else {
-				tableField = fmt.Sprintf("%s INT NOT NULL default 0", field.Tag.Get("field"))
+				tableField = fmt.Sprintf("%s INT NOT NULL default 0", field.Tag.Get("db"))
 			}
 		}
 		queryFields = append(queryFields, tableField)
 
 		if field.Tag.Get("key") == "primary" {
-			queryPrimary = append(queryPrimary, field.Tag.Get("field"))
+			queryPrimary = append(queryPrimary, field.Tag.Get("db"))
 		}
 
 	}
