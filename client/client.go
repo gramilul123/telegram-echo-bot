@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/gramilul123/telegram-echo-bot/configs"
@@ -44,8 +45,20 @@ func (bot *TgBot) GetWebhookInfo() tgbotapi.WebhookInfo {
 	}
 
 	if info.LastErrorDate != 0 {
-		log.Fatal("Telegram callback failed: %s", info.LastErrorMessage)
+		log.Fatalf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 
 	return info
+}
+
+var once sync.Once
+var clientTg *TgBot
+
+func Get() *TgBot {
+	once.Do(func() {
+		clientTg = &TgBot{}
+		clientTg.Init()
+	})
+
+	return clientTg
 }
