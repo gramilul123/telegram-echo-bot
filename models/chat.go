@@ -6,6 +6,11 @@ import (
 	"github.com/gramilul123/telegram-echo-bot/db"
 )
 
+const (
+	OPEN = "O" //Open chat
+	WAIT = "W" //Wait chat
+)
+
 type Chat struct {
 	ID      int    `db:"id" key:"primary" extra:"AUTO_INCREMENT"`
 	ChatID  int64  `db:"chat_id"`
