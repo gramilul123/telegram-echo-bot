@@ -57,12 +57,49 @@ func CreateTable(model interface{}) {
 	GetDBConnect().DB.MustExec(query)
 }
 
+func GetSelectRequest(object interface{}, selectWhere map[string]interface{}) string {
+	var model string
+	var selectMap []string
+
+	reflectValue := reflect.ValueOf(object)
+	varFullName := reflectValue.Type().String()
+	varSlice := strings.Split(varFullName, ".")
+	model = varSlice[len(varSlice)-1]
+
+	selectMap = append(selectMap, fmt.Sprintf("%d", 1))
+	for field, value := range selectWhere {
+		switch value.(type) {
+		case int, int64:
+			selectMap = append(selectMap, fmt.Sprintf("%s = %d", field, value))
+		case string:
+			selectMap = append(selectMap, fmt.Sprintf("%s = '%s'", field, value))
+		}
+	}
+
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s", model, strings.Join(selectMap, " AND "))
+}
+
 func Insert(object interface{}) {
 	query := getInsertRequest(object)
-	tx := GetDBConnect().DB.MustBegin()
-	tx.NamedExec(query, object)
-	tx.Commit()
+	GetDBConnect().DB.NamedExec(query, object)
+}
 
+func Delete(object interface{}, deleteWhere []string) {
+	var model, query string
+	var deletetMap []string
+
+	reflectValue := reflect.ValueOf(object)
+	varFullName := reflectValue.Type().String()
+	varSlice := strings.Split(varFullName, ".")
+	model = varSlice[len(varSlice)-1]
+
+	for _, field := range deleteWhere {
+		deletetMap = append(deletetMap, fmt.Sprintf("%s = :%s", field, field))
+	}
+
+	query = fmt.Sprintf("DELETE FROM %s WHERE %s", model, strings.Join(deletetMap, " AND "))
+
+	GetDBConnect().DB.NamedExec(query, object)
 }
 
 func getInsertRequest(object interface{}) string {
