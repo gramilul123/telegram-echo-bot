@@ -102,6 +102,42 @@ func Delete(object interface{}, deleteWhere []string) {
 	GetDBConnect().DB.NamedExec(query, object)
 }
 
+// UpdateRow func updates row from object by field
+func UpdateRow(object interface{}, field string) {
+	query := getUpdatetRequest(object, field)
+	GetDBConnect().DB.NamedExec(query, object)
+}
+
+// getUpdatetRequest func returns update request string
+func getUpdatetRequest(object interface{}, rowField string) string {
+	var model, whereValue string
+	var updateMap []string
+
+	reflectValue := reflect.ValueOf(object)
+	varFullName := reflectValue.Type().String()
+	varSlice := strings.Split(varFullName, ".")
+	model = varSlice[len(varSlice)-1]
+
+	for i := 0; i < reflectValue.NumField(); i++ {
+		field := reflectValue.Type().Field(i)
+
+		if len(field.Tag.Get("db")) > 0 && len(field.Tag.Get("extra")) == 0 {
+			updateMap = append(updateMap, fmt.Sprintf("%s=:%s", field.Tag.Get("db"), field.Tag.Get("db")))
+
+			if field.Tag.Get("db") == rowField {
+				switch field.Type.String() {
+				case "string":
+					whereValue = fmt.Sprintf("'%s'", reflectValue.Field(i).Interface())
+				case "int":
+					whereValue = fmt.Sprintf("%d", reflectValue.Field(i).Interface())
+				}
+			}
+		}
+	}
+
+	return fmt.Sprintf("UPDATE %s SET %s WHERE %s=%s;", model, strings.Join(updateMap, ", "), rowField, whereValue)
+}
+
 func getInsertRequest(object interface{}) string {
 	var model string
 	var insertMap, valueMap []string
