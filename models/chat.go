@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	OPEN = "O" //Open chat
-	WAIT = "W" //Wait chat
+	OPEN = "O" //Chat open
+	WAIT = "W" //Chat waiting
 )
 
 type Chat struct {
@@ -20,7 +20,7 @@ type Chat struct {
 	Time    int    `db:"time"`
 }
 
-func (chat *Chat) DeleteByChatID(chatId int64) {
+func (chat Chat) DeleteByChatID(chatId int64) {
 
 	deleteWhere := []string{}
 	deleteWhere = append(deleteWhere, "chat_id")
@@ -29,22 +29,35 @@ func (chat *Chat) DeleteByChatID(chatId int64) {
 }
 
 // Insert func inserts row into Chat table
-func (object *Chat) Insert(chat Chat) {
+func (Chat) Insert(chat Chat) {
 	db.Insert(chat)
 }
 
-func (chat *Chat) GetByChatId(chatId int64) {
+func (Chat) GetByChatId(chatId int64) Chat {
 	chats := []Chat{}
 	selectWhere := make(map[string]interface{})
 	selectWhere["chat_id"] = chatId
+
 	err := db.GetDBConnect().DB.Select(&chats, db.GetSelectRequest(&Chat{}, selectWhere))
 	if err != nil {
 		log.Fatalf("Chat: GetByChatId: %s", err)
 	}
-	log.Println(chats)
+
+	if len(chats) == 0 {
+		log.Fatal("Chat: GetByChatId: Chat %d not found", chatId)
+	}
+
+	return chats[0]
 }
 
-func Chats() *Chat {
+func (Chat) UpdateStatus(chat Chat, status string) Chat {
+	chat.Status = status
+	db.UpdateRow(chat, "chat_id")
+
+	return chat
+}
+
+func Chats(chatID ...int64) *Chat {
 	chat := &Chat{}
 
 	return chat
