@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gramilul123/telegram-echo-bot/warship"
+	warship "github.com/gramilul123/telegram-echo-bot/game/warship"
 )
 
 const (

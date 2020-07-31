@@ -3,7 +3,7 @@ package strategies
 import (
 	"testing"
 
-	"github.com/gramilul123/telegram-echo-bot/war_map"
+	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
 )
 
 func TestSimpleStrategy(t *testing.T) {
@@ -43,7 +43,7 @@ func TestMiddleStrategy(t *testing.T) {
 	gameMap := war_map.WarMap{}
 	gameMap.Create(true)
 
-	variantStrategy := GetStrategy("middle")
+	variantStrategy := GetStrategy(MIDDLE)
 	variantStrategy.Create()
 
 	itt := 1
@@ -51,7 +51,7 @@ func TestMiddleStrategy(t *testing.T) {
 		x, y, gameWorkMap = variantStrategy.GetShot(result)
 		result = CheckShot(x, y, gameWorkMap, gameMap)
 
-		if result == "win" || result == "done" {
+		if result == WIN || result == DONE {
 			break
 		}
 		itt++

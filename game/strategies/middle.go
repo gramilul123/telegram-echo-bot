@@ -1,7 +1,7 @@
 package strategies
 
 import (
-	"github.com/gramilul123/telegram-echo-bot/war_map"
+	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
 )
 
 type MiddleStrategy struct {
