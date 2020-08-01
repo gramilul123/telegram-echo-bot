@@ -26,13 +26,8 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 			msg = actions.StartBot(update)
 
-		} else if update.Message.Text == "select_map" {
-
-			deleteMsg := tgbotapi.NewDeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
-			client.Get().Client.DeleteMessage(deleteMsg)
-			msg = actions.SelectMap(update.Message.Chat.ID)
-
 		}
+
 		client.Get().Client.Send(msg)
 	} else if update.CallbackQuery != nil {
 
