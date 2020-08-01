@@ -133,7 +133,7 @@ func getUpdatetRequest(object interface{}, rowField string) string {
 				switch field.Type.String() {
 				case "string":
 					whereValue = fmt.Sprintf("'%s'", reflectValue.Field(i).Interface())
-				case "int":
+				case "int", "int64":
 					whereValue = fmt.Sprintf("%d", reflectValue.Field(i).Interface())
 				}
 			}
