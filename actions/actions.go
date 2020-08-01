@@ -9,7 +9,7 @@ import (
 )
 
 // StartBot action after clicking Start button
-func StartBot(update tgbotapi.Update) (msg tgbotapi.MessageConfig) {
+func StartBot(update tgbotapi.Update) (msg tgbotapi.MessageConfig, gameMap war_map.WarMap) {
 
 	chat := models.Chat{
 		ChatID: update.Message.Chat.ID,
@@ -18,7 +18,7 @@ func StartBot(update tgbotapi.Update) (msg tgbotapi.MessageConfig) {
 	models.InstanceChat().DeleteByChatID(chat.ChatID)
 	models.InstanceChat().Insert(chat)
 
-	text := getNewMapMsg()
+	text, gameMap := getNewMapMsg()
 	markup := getSelectMapInlineMarkup()
 	msg = tgbotapi.NewMessage(chat.ChatID, text)
 	msg.ReplyMarkup = &markup
@@ -27,8 +27,8 @@ func StartBot(update tgbotapi.Update) (msg tgbotapi.MessageConfig) {
 }
 
 // ReSelectMap action after clicking Select map button
-func ReSelectMap(ChatID int64, MessageID int) (editMsg tgbotapi.EditMessageTextConfig) {
-	text := getNewMapMsg()
+func ReSelectMap(ChatID int64, MessageID int) (editMsg tgbotapi.EditMessageTextConfig, gameMap war_map.WarMap) {
+	text, gameMap := getNewMapMsg()
 	markup := getSelectMapInlineMarkup()
 	editMsg = tgbotapi.NewEditMessageText(ChatID, MessageID, text)
 	editMsg.ReplyMarkup = &markup
@@ -36,9 +36,17 @@ func ReSelectMap(ChatID int64, MessageID int) (editMsg tgbotapi.EditMessageTextC
 	return
 }
 
+// SaveMap save data to chat table
+func SaveMap(ChatID int64, MessageID int, gameMap war_map.WarMap) {
+	chat := models.InstanceChat().GetByChatID(ChatID)
+	chat.MessageID = MessageID
+	chat.AcceptedMap = gameMap.MapToJson()
+	models.InstanceChat().UpdateChat(chat)
+}
+
 // getMapMsg returns new map
-func getNewMapMsg() (text string) {
-	gameMap := war_map.WarMap{}
+func getNewMapMsg() (text string, gameMap war_map.WarMap) {
+	gameMap = war_map.WarMap{}
 	gameMap.Create(true)
 
 	for i, row := range gameMap.Cells {
