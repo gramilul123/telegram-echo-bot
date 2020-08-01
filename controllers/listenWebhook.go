@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -15,19 +14,35 @@ import (
 func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	var update tgbotapi.Update
 	var msg tgbotapi.MessageConfig
+	var editMsg tgbotapi.EditMessageTextConfig
 
 	bytes, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
 	json.Unmarshal(bytes, &update)
 
-	log.Println(update.Message.Text)
-	if update.Message.Text == "/start" {
-		msg = actions.StartBot(update)
+	if update.Message != nil {
+		if update.Message.Text == "/start" {
 
-	} else if update.Message.Text == "select_map" {
-		msg = actions.SelectMap(update)
+			msg = actions.StartBot(update)
+
+		} else if update.Message.Text == "select_map" {
+
+			deleteMsg := tgbotapi.NewDeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
+			client.Get().Client.DeleteMessage(deleteMsg)
+			msg = actions.SelectMap(update.Message.Chat.ID)
+
+		}
+		client.Get().Client.Send(msg)
+	} else if update.CallbackQuery != nil {
+
+		if update.CallbackQuery.Data == "select_map" {
+
+			editMsg = actions.ReSelectMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
+		}
+
+		client.Get().Client.Send(editMsg)
+
 	}
 
-	client.Get().Client.Send(msg)
 }
