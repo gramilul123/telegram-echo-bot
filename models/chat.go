@@ -63,6 +63,13 @@ func (Chat) UpdateStatus(chat Chat, status string) {
 	}
 }
 
+// UpdateChat updates chat row
+func (Chat) UpdateChat(chat Chat) {
+	if chat.ChatID != 0 {
+		db.UpdateRow(chat, "chat_id")
+	}
+}
+
 // InstanceChat returns chat instans
 func InstanceChat() Chat {
 	chat := Chat{}
