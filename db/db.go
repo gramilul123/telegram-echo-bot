@@ -84,7 +84,8 @@ func Insert(object interface{}) {
 	GetDBConnect().DB.NamedExec(query, object)
 }
 
-func Delete(object interface{}, deleteWhere []string) {
+// Delete delete row by where
+func Delete(object interface{}, deleteWhere map[string]interface{}) {
 	var model, query string
 	var deletetMap []string
 
@@ -93,13 +94,14 @@ func Delete(object interface{}, deleteWhere []string) {
 	varSlice := strings.Split(varFullName, ".")
 	model = varSlice[len(varSlice)-1]
 
-	for _, field := range deleteWhere {
+	deletetMap = append(deletetMap, fmt.Sprintf("%d", 1))
+	for field, _ := range deleteWhere {
 		deletetMap = append(deletetMap, fmt.Sprintf("%s = :%s", field, field))
 	}
 
 	query = fmt.Sprintf("DELETE FROM %s WHERE %s", model, strings.Join(deletetMap, " AND "))
 
-	GetDBConnect().DB.NamedExec(query, object)
+	GetDBConnect().DB.NamedExec(query, deleteWhere)
 }
 
 // UpdateRow func updates row from object by field
