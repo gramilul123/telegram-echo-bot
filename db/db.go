@@ -52,11 +52,13 @@ func getEnv(key string) string {
 	return value
 }
 
+// CreateTable creates table
 func CreateTable(model interface{}) {
 	query := getTableCreationRequest(model)
 	GetDBConnect().DB.MustExec(query)
 }
 
+// GetSelectRequest return select request
 func GetSelectRequest(object interface{}, selectWhere map[string]interface{}) string {
 	var model string
 	var selectMap []string
@@ -79,6 +81,7 @@ func GetSelectRequest(object interface{}, selectWhere map[string]interface{}) st
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s", model, strings.Join(selectMap, " AND "))
 }
 
+// Insert inserts row
 func Insert(object interface{}) {
 	query := getInsertRequest(object)
 	GetDBConnect().DB.NamedExec(query, object)
@@ -140,6 +143,7 @@ func getUpdatetRequest(object interface{}, rowField string) string {
 	return fmt.Sprintf("UPDATE %s SET %s WHERE %s=%s;", model, strings.Join(updateMap, ", "), rowField, whereValue)
 }
 
+// getInsertRequest returns insert row request
 func getInsertRequest(object interface{}) string {
 	var model string
 	var insertMap, valueMap []string
@@ -164,6 +168,7 @@ func getInsertRequest(object interface{}) string {
 	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", model, strings.Join(insertMap, ", "), strings.Join(valueMap, ", "))
 }
 
+// getTableCreationRequest returns create table request
 func getTableCreationRequest(model interface{}) string {
 	var queryFields, queryPrimary []string
 	reflectValue := reflect.ValueOf(model)
@@ -177,13 +182,23 @@ func getTableCreationRequest(model interface{}) string {
 		tableField := ""
 		switch field.Type.String() {
 		case "string":
-			tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("db"), field.Tag.Get("len"))
-		case "int":
-			if field.Tag.Get("extra") == "AUTO_INCREMENT" {
+
+			switch field.Tag.Get("type") {
+			case "text":
+				tableField = fmt.Sprintf("%s TEXT", field.Tag.Get("db"))
+			default:
+				tableField = fmt.Sprintf("%s VARCHAR(%s) NOT NULL DEFAULT ''", field.Tag.Get("db"), field.Tag.Get("len"))
+			}
+
+		case "int", "int64":
+
+			switch field.Tag.Get("extra") {
+			case "AUTO_INCREMENT":
 				tableField = fmt.Sprintf("%s INT %s", field.Tag.Get("db"), field.Tag.Get("extra"))
-			} else {
+			default:
 				tableField = fmt.Sprintf("%s INT NOT NULL default 0", field.Tag.Get("db"))
 			}
+
 		}
 		queryFields = append(queryFields, tableField)
 
