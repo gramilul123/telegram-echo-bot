@@ -1,7 +1,9 @@
 package war_map
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -71,6 +73,16 @@ func (mapData *WarMap) Create(addShip bool) {
 			}
 		}
 	}
+}
+
+func (mapData WarMap) MapToJson() string {
+	json, err := json.Marshal(mapData)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return (string(json))
 }
 
 func AddShipIfPossible(shipType int, cells [][]int) (bool, map[string]bool, []warship.HaloLocation) {
