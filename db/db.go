@@ -59,14 +59,8 @@ func CreateTable(model interface{}) {
 }
 
 // GetSelectRequest return select request
-func GetSelectRequest(object interface{}, selectWhere map[string]interface{}) string {
-	var model string
+func GetSelectRequest(model string, selectWhere map[string]interface{}) string {
 	var selectMap []string
-
-	reflectValue := reflect.ValueOf(object)
-	varFullName := reflectValue.Type().String()
-	varSlice := strings.Split(varFullName, ".")
-	model = varSlice[len(varSlice)-1]
 
 	selectMap = append(selectMap, fmt.Sprintf("%d", 1))
 	for field, value := range selectWhere {
@@ -108,15 +102,15 @@ func Delete(object interface{}, deleteWhere map[string]interface{}) {
 }
 
 // UpdateRow func updates row from object by field
-func UpdateRow(object interface{}, field string) {
-	query := getUpdatetRequest(object, field)
+func Update(object interface{}, whereValues map[string]interface{}) {
+	query := getUpdatetRequest(object, whereValues)
 	GetDBConnect().DB.NamedExec(query, object)
 }
 
 // getUpdatetRequest func returns update request string
-func getUpdatetRequest(object interface{}, rowField string) string {
-	var model, whereValue string
-	var updateMap []string
+func getUpdatetRequest(object interface{}, whereValues map[string]interface{}) string {
+	var model string
+	var updateMap, whereMap []string
 
 	reflectValue := reflect.ValueOf(object)
 	varFullName := reflectValue.Type().String()
@@ -128,19 +122,20 @@ func getUpdatetRequest(object interface{}, rowField string) string {
 
 		if len(field.Tag.Get("db")) > 0 && len(field.Tag.Get("extra")) == 0 {
 			updateMap = append(updateMap, fmt.Sprintf("%s=:%s", field.Tag.Get("db"), field.Tag.Get("db")))
-
-			if field.Tag.Get("db") == rowField {
-				switch field.Type.String() {
-				case "string":
-					whereValue = fmt.Sprintf("'%s'", reflectValue.Field(i).Interface())
-				case "int", "int64":
-					whereValue = fmt.Sprintf("%d", reflectValue.Field(i).Interface())
-				}
-			}
 		}
 	}
 
-	return fmt.Sprintf("UPDATE %s SET %s WHERE %s=%s;", model, strings.Join(updateMap, ", "), rowField, whereValue)
+	whereMap = append(whereMap, fmt.Sprintf("%d", 1))
+	for field, value := range whereValues {
+		switch value.(type) {
+		case int, int64:
+			whereMap = append(whereMap, fmt.Sprintf("%s = %d", field, value))
+		case string:
+			whereMap = append(whereMap, fmt.Sprintf("%s = '%s'", field, value))
+		}
+	}
+
+	return fmt.Sprintf("UPDATE %s SET %s WHERE %s;", model, strings.Join(updateMap, ", "), strings.Join(whereMap, " AND "))
 }
 
 // getInsertRequest returns insert row request
