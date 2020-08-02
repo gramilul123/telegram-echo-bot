@@ -5,6 +5,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/gramilul123/telegram-echo-bot/db"
+	"github.com/gramilul123/telegram-echo-bot/game/strategies"
 	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
 	"github.com/gramilul123/telegram-echo-bot/models"
 )
@@ -50,9 +51,52 @@ func SaveMap(ChatID int64, MessageID int, gameMap war_map.WarMap) {
 	models.GetModel(models.CHAT).Update(chat, "chat_id", ChatID)
 }
 
-/*func Accept() {
+func CreateGame(ChatID int64) {
+	chats := []models.Chat{}
 
-}*/
+	models.GetModel(models.CHAT).Get("chat_id", ChatID, &chats)
+	chat := chats[0]
+
+	game := models.Game{
+		Status:    models.NewGame,
+		UserIDOne: ChatID,
+		WarMapOne: chat.AcceptedMap,
+	}
+
+	models.GetModel(models.GAME).Delete("user_id_one", ChatID)
+	db.Insert(game)
+}
+
+// Accept action after clicking Accept map
+func Accept(ChatID int64, MessageID int) (editMsg tgbotapi.EditMessageTextConfig) {
+	text := "Choose enemy"
+	brows := [][]tgbotapi.InlineKeyboardButton{}
+	brow := []tgbotapi.InlineKeyboardButton{}
+
+	callbackSelectMap := fmt.Sprintf(strategies.SIMPLE)
+	textSelectMap := fmt.Sprintf("Easy")
+	brow = append(brow, tgbotapi.InlineKeyboardButton{
+		Text:         textSelectMap,
+		CallbackData: &callbackSelectMap,
+	})
+
+	callbackAccept := fmt.Sprintf(strategies.MIDDLE)
+	textAccept := fmt.Sprintf("Middle")
+	brow = append(brow, tgbotapi.InlineKeyboardButton{
+		Text:         textAccept,
+		CallbackData: &callbackAccept,
+	})
+
+	brows = append(brows, brow)
+
+	markup := tgbotapi.NewInlineKeyboardMarkup(brows...)
+	editMsg = tgbotapi.NewEditMessageText(ChatID, MessageID, text)
+	editMsg.ReplyMarkup = &markup
+
+	CreateGame(ChatID)
+
+	return
+}
 
 // getMapMsg returns new map
 func getNewMapMsg() (text string, gameMap war_map.WarMap) {

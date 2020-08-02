@@ -10,4 +10,7 @@ import (
 func CreateTable(w http.ResponseWriter, r *http.Request) {
 	chat := &models.Chat{}
 	db.CreateTable(chat)
+
+	game := &models.Game{}
+	db.CreateTable(game)
 }
