@@ -65,7 +65,23 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 		} else if update.CallbackQuery.Data == strategies.SIMPLE || update.CallbackQuery.Data == strategies.MIDDLE {
 
-			//editMsg = actions.ChoseEnemy(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
+			editMsg = actions.ChoseEnemy(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
+
+			_, err := client.Get().Client.Send(editMsg)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		} else if update.CallbackQuery.Data == "lose" {
+
+			editMsg = actions.Finish(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
+
+			_, err := client.Get().Client.Send(editMsg)
+
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 	}
