@@ -76,13 +76,21 @@ func (mapData *WarMap) Create(addShip bool) {
 }
 
 func (mapData WarMap) MapToJson() string {
-	json, err := json.Marshal(mapData)
+	str, err := json.Marshal(mapData)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return (string(json))
+	return (string(str))
+}
+
+func (mapData *WarMap) JsonToMap(str string) {
+	bytes := []byte(str)
+
+	if err := json.Unmarshal(bytes, &mapData); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func AddShipIfPossible(shipType int, cells [][]int) (bool, map[string]bool, []warship.HaloLocation) {
