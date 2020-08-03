@@ -45,45 +45,33 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 			editMsg, gameMap = actions.ReSelectMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 
-			_, err := client.Get().Client.Send(editMsg)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
 			actions.SaveMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, gameMap)
 
 		} else if update.CallbackQuery.Data == "accept" {
 
 			editMsg = actions.Accept(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 
-			_, err := client.Get().Client.Send(editMsg)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
 		} else if update.CallbackQuery.Data == strategies.SIMPLE || update.CallbackQuery.Data == strategies.MIDDLE {
 
 			editMsg = actions.ChoseEnemy(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
-
-			_, err := client.Get().Client.Send(editMsg)
-
-			if err != nil {
-				log.Fatal(err)
-			}
 
 		} else if update.CallbackQuery.Data == "lose" {
 
 			editMsg = actions.Finish(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
 
-			_, err := client.Get().Client.Send(editMsg)
+		} else if update.CallbackQuery.Data == "new" {
 
-			if err != nil {
-				log.Fatal(err)
-			}
+			editMsg, gameMap = actions.ReSelectMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
+
+			actions.SaveMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, gameMap)
+
 		}
 
+		_, err := client.Get().Client.Send(editMsg)
+
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 }
