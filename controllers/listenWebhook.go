@@ -74,7 +74,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 		_, err := client.Get().Client.Send(editMsg)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Listening callback message: %s", err)
 		}
 	}
 
