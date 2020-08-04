@@ -152,6 +152,54 @@ func getEmptyWorkMap() (markup tgbotapi.ReplyKeyboardMarkup) {
 	return
 }
 
+// getWorkMap returns keyboard with work map
+func getWorkMap(cells [][]int) (markup tgbotapi.ReplyKeyboardMarkup) {
+	var text string
+	brows := [][]tgbotapi.KeyboardButton{}
+	for i, row := range cells {
+		if i > 0 && i < 11 {
+			brow := []tgbotapi.KeyboardButton{}
+			for j, value := range row {
+				if j > 0 && j < 11 {
+					switch value {
+					case strategies.SHIP:
+						text = fmt.Sprint("❌")
+					case strategies.HALO:
+						text = fmt.Sprint("✴️")
+					case strategies.EMPTY:
+						text = fmt.Sprint("🔸")
+					default:
+						text = fmt.Sprintf("⬜️\n\n\n%v-%v", i, j)
+					}
+
+					brow = append(brow, tgbotapi.KeyboardButton{
+						Text: text,
+					})
+				}
+			}
+			brows = append(brows, brow)
+		}
+	}
+
+	markup = tgbotapi.NewReplyKeyboard(brows...)
+
+	return
+}
+
+// getWaitButton returns wait button
+func getWaitButton() (markup tgbotapi.ReplyKeyboardMarkup) {
+	brows := [][]tgbotapi.KeyboardButton{}
+	brow := []tgbotapi.KeyboardButton{}
+	brow = append(brow, tgbotapi.KeyboardButton{
+		Text: "Wait",
+	})
+	brows = append(brows, brow)
+	markup = tgbotapi.NewReplyKeyboard(brows...)
+
+	return
+}
+
+// sendWorkMap send empty work map to keyboard
 func sendWorkMap(chatID int64) {
 	markup := getEmptyWorkMap()
 	msg := tgbotapi.NewMessage(chatID, "Your shot")

@@ -1,10 +1,14 @@
 package actions
 
 import (
+	"fmt"
+	"log"
 	"regexp"
 	"strconv"
+	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/gramilul123/telegram-echo-bot/client"
 	"github.com/gramilul123/telegram-echo-bot/db"
 	"github.com/gramilul123/telegram-echo-bot/game/strategies"
 	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
@@ -117,7 +121,65 @@ func CheckStep(text string) (matched bool, x int, y int) {
 	return
 }
 
-//
-func CheckShot(x int, y int) {
+// MakeShot return result user shot
+func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
+	var result, text string
+	var markup tgbotapi.ReplyKeyboardMarkup
+	var editMsg tgbotapi.EditMessageTextConfig
+	WorkMapOne := war_map.WarMap{}
+	WarMapTwo := war_map.WarMap{}
 
+	game := GetGame(chatID)
+
+	chat := GetChat(chatID)
+
+	if len(game.WorkMapOne) == 0 {
+		WorkMapOne.Create(false)
+	} else {
+		WorkMapOne.JsonToMap(game.WorkMapOne)
+	}
+
+	WarMapTwo.JsonToMap(game.WarMapTwo)
+	result, WorkMapOne.Cells = strategies.CheckShot(x, y, WorkMapOne.Cells, WarMapTwo)
+	log.Println(result)
+	if result == strategies.NOK {
+
+		//markup = getWaitButton()
+		markup = getWorkMap(WorkMapOne.Cells)
+		text = fmt.Sprintf("%d-%d miss", x, y)
+
+	} else if result == strategies.HIT || result == strategies.DESTROYED {
+
+		markup = getWorkMap(WorkMapOne.Cells)
+		text = fmt.Sprintf("%d-%d hit", x, y)
+
+	} else if result == strategies.WIN {
+
+		editMsg = Finish(chatID, chat.MessageID, "win")
+		_, err := client.Get().Client.Send(editMsg)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} else if result == strategies.DONE {
+
+		log.Fatalln("MakeShot: Unknown error")
+
+	}
+
+	game.WorkMapOne = WorkMapOne.MapToJson()
+	game.WarMapTwo = WarMapTwo.MapToJson()
+	models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
+
+	if unsafe.Sizeof(markup) != 0 {
+
+		msg = tgbotapi.NewMessage(chat.ChatID, text)
+		msg.ReplyMarkup = &markup
+
+	} else if unsafe.Sizeof(editMsg) != 0 {
+
+	}
+
+	return
 }

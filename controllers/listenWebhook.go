@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/gramilul123/telegram-echo-bot/actions"
@@ -26,21 +27,29 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(bytes, &update)
 
 	if update.Message != nil {
-
+		log.Println(update.Message.Text)
 		if update.Message.Text == "/start" {
 
 			msg, gameMap = actions.StartBot(update)
 
+		} else if update.Message.Text == "Wait" {
+
+		} else if matched, x, y := actions.CheckStep(update.Message.Text); matched {
+			log.Println(x, y)
+			msg = actions.MakeShot(update.Message.Chat.ID, x, y)
+
+		}
+
+		if unsafe.Sizeof(msg) != 0 && len(msg.Text) > 0 {
 			response, err := client.Get().Client.Send(msg)
 
 			if err != nil {
 				log.Fatalf("Listening update message: %s", err)
 			}
 
-			actions.SaveMap(update.Message.Chat.ID, response.MessageID, gameMap)
-
-		} else if matched, x, y := actions.CheckStep(update.Message.Text); matched {
-			log.Println(x, y)
+			if update.Message.Text == "/start" {
+				actions.SaveMap(update.Message.Chat.ID, response.MessageID, gameMap)
+			}
 		}
 
 	} else if update.CallbackQuery != nil {
