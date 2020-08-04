@@ -34,7 +34,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 			response, err := client.Get().Client.Send(msg)
 
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Listening update message: %s", err)
 			}
 
 			actions.SaveMap(update.Message.Chat.ID, response.MessageID, gameMap)
