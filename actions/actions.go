@@ -1,6 +1,9 @@
 package actions
 
 import (
+	"regexp"
+	"strconv"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/gramilul123/telegram-echo-bot/db"
 	"github.com/gramilul123/telegram-echo-bot/game/strategies"
@@ -94,6 +97,8 @@ func ChoseEnemy(ChatID int64, MessageID int, enemy string) (editMsg tgbotapi.Edi
 	markup := getResignButton()
 	editMsg = tgbotapi.NewEditMessageText(ChatID, MessageID, text)
 	editMsg.ReplyMarkup = &markup
+
+	sendWorkMap(ChatID)
 
 	return
 }

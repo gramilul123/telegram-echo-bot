@@ -1,7 +1,11 @@
 package actions
 
 import (
+	"fmt"
+	"log"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/gramilul123/telegram-echo-bot/client"
 	"github.com/gramilul123/telegram-echo-bot/db"
 	"github.com/gramilul123/telegram-echo-bot/game/strategies"
 	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
@@ -127,4 +131,37 @@ func CreateGame(ChatID int64) {
 
 	models.GetModel(models.GAME).Delete("user_id_one", ChatID)
 	db.Insert(game)
+}
+
+// getWorkMap returns keyboard with work map
+func getWorkMap() (markup tgbotapi.ReplyKeyboardMarkup) {
+	brows := [][]tgbotapi.KeyboardButton{}
+	for i := 1; i <= 10; i++ {
+		brow := []tgbotapi.KeyboardButton{}
+		for j := 1; j <= 10; j++ {
+			text := fmt.Sprintf("⬜️\n\n\n%v-%v", i, j)
+			brow = append(brow, tgbotapi.KeyboardButton{
+				Text: text,
+			})
+		}
+		brows = append(brows, brow)
+	}
+
+	markup = tgbotapi.NewReplyKeyboard(brows...)
+
+	return
+}
+
+func sendWorkMap(chatID int64) {
+	markup := getWorkMap()
+	msg := tgbotapi.NewMessage(chatID, "Your shot")
+	msg.ReplyMarkup = &markup
+
+	_, err := client.Get().Client.Send(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	/*removeMsg := tgbotapi.NewDeleteMessage(chatID, response.MessageID)
+	client.Get().Client.DeleteMessage(removeMsg)*/
 }
