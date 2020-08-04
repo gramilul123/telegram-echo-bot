@@ -133,8 +133,8 @@ func CreateGame(ChatID int64) {
 	db.Insert(game)
 }
 
-// getWorkMap returns keyboard with work map
-func getWorkMap() (markup tgbotapi.ReplyKeyboardMarkup) {
+// getEmptyWorkMap returns keyboard with emty map
+func getEmptyWorkMap() (markup tgbotapi.ReplyKeyboardMarkup) {
 	brows := [][]tgbotapi.KeyboardButton{}
 	for i := 1; i <= 10; i++ {
 		brow := []tgbotapi.KeyboardButton{}
@@ -153,7 +153,7 @@ func getWorkMap() (markup tgbotapi.ReplyKeyboardMarkup) {
 }
 
 func sendWorkMap(chatID int64) {
-	markup := getWorkMap()
+	markup := getEmptyWorkMap()
 	msg := tgbotapi.NewMessage(chatID, "Your shot")
 	msg.ReplyMarkup = &markup
 
