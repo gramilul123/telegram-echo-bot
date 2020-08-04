@@ -16,7 +16,7 @@ func TestSimpleStrategy(t *testing.T) {
 	str.Create()
 
 	x, y, gameWorkMap := str.GetShot(result)
-	result = CheckShot(x, y, gameWorkMap, gameMap)
+	result, _ = CheckShot(x, y, gameWorkMap, gameMap)
 
 	hasError := false
 	switch gameMap.Cells[x][y] {
@@ -49,7 +49,7 @@ func TestMiddleStrategy(t *testing.T) {
 	itt := 1
 	for {
 		x, y, gameWorkMap = variantStrategy.GetShot(result)
-		result = CheckShot(x, y, gameWorkMap, gameMap)
+		result, _ = CheckShot(x, y, gameWorkMap, gameMap)
 
 		if result == WIN || result == DONE {
 			break

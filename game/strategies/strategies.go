@@ -44,12 +44,12 @@ func GetStrategy(variant string) (strategy Strategy) {
 	return
 }
 
-func CheckShot(x, y int, gameWorkMap [][]int, gameMap war_map.WarMap) string {
+func CheckShot(x, y int, gameWorkMap [][]int, gameMap war_map.WarMap) (string, [][]int) {
 	var result string
 
 	if x == 0 && y == 0 {
 
-		return DONE
+		return DONE, gameWorkMap
 	}
 
 	if gameMap.Cells[x][y] == war_map.Ship {
@@ -84,7 +84,7 @@ func CheckShot(x, y int, gameWorkMap [][]int, gameMap war_map.WarMap) string {
 		}
 
 		if allShipsDestroed {
-			return WIN
+			return WIN, gameWorkMap
 		}
 
 	} else {
@@ -92,7 +92,7 @@ func CheckShot(x, y int, gameWorkMap [][]int, gameMap war_map.WarMap) string {
 		result = NOK
 	}
 
-	return result
+	return result, gameWorkMap
 }
 
 func GetRndVariant(variants []war_map.Coordinate) (x, y int) {
