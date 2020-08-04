@@ -97,3 +97,22 @@ func ChoseEnemy(ChatID int64, MessageID int, enemy string) (editMsg tgbotapi.Edi
 
 	return
 }
+
+// CheckStep returns result checking
+func CheckStep(text string) (matched bool, x int, y int) {
+	rexp, _ := regexp.Compile(`(\d+)-(\d+)`)
+	str := rexp.FindStringSubmatch(text)
+
+	if len(str) == 3 {
+		matched = true
+		x, _ = strconv.Atoi(str[1])
+		y, _ = strconv.Atoi(str[2])
+	}
+
+	return
+}
+
+//
+func CheckShot(x int, y int) {
+
+}

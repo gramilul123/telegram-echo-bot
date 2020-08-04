@@ -38,7 +38,11 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 			}
 
 			actions.SaveMap(update.Message.Chat.ID, response.MessageID, gameMap)
+
+		} else if matched, x, y := actions.CheckStep(update.Message.Text); matched {
+			log.Println(x, y)
 		}
+
 	} else if update.CallbackQuery != nil {
 
 		if update.CallbackQuery.Data == "select_map" {
