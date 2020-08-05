@@ -131,6 +131,10 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 
 	game := GetGame(chatID)
 
+	if game.Status == models.Stop {
+		return
+	}
+
 	chat := GetChat(chatID)
 
 	if len(game.WorkMapOne) == 0 {
@@ -161,6 +165,8 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		game.Status = models.Stop
 
 	} else if result == strategies.DONE {
 

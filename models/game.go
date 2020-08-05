@@ -3,6 +3,7 @@ package models
 const (
 	NewGame    = "N"
 	ActiveGame = "A"
+	Stop       = "S"
 )
 
 type Game struct {
