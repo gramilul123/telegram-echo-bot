@@ -146,7 +146,7 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 
 	WarMapTwo.JsonToMap(game.WarMapTwo)
 	result, WorkMapOne.Cells = strategies.CheckShot(x, y, WorkMapOne.Cells, WarMapTwo)
-	log.Println(result)
+
 	if result == strategies.NOK {
 
 		//markup = getWaitButton()

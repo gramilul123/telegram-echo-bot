@@ -28,7 +28,6 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(bytes, &update)
 
 	if update.Message != nil {
-		log.Println(update.Message.Text)
 
 		actions.DeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
 
@@ -39,7 +38,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 		} else if update.Message.Text == "Wait" {
 
 		} else if matched, x, y := actions.CheckStep(update.Message.Text); matched {
-			log.Println(x, y)
+
 			msg = actions.MakeShot(update.Message.Chat.ID, x, y)
 			isShot = true
 		}
