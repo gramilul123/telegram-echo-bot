@@ -21,6 +21,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 	var editMsg tgbotapi.EditMessageTextConfig
 	var gameMap war_map.WarMap
 	var isShot bool
+	var result string
 
 	bytes, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
@@ -39,7 +40,7 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 		} else if matched, x, y := actions.CheckStep(update.Message.Text); matched {
 
-			msg = actions.MakeShot(update.Message.Chat.ID, x, y)
+			msg, result = actions.MakeShot(update.Message.Chat.ID, x, y)
 			isShot = true
 		}
 
@@ -58,6 +59,9 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 				actions.SaveWorkMessageID(update.Message.Chat.ID, response.MessageID)
 
+				if result == strategies.NOK {
+					actions.EnemyGame(update.Message.Chat.ID)
+				}
 			}
 		}
 

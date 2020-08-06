@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"time"
 	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -122,8 +123,8 @@ func CheckStep(text string) (matched bool, x int, y int) {
 }
 
 // MakeShot return result user shot
-func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
-	var result, text string
+func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig, result string) {
+	var text string
 	var markup tgbotapi.ReplyKeyboardMarkup
 	WorkMapOne := war_map.WarMap{}
 	WarMapTwo := war_map.WarMap{}
@@ -149,8 +150,8 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 
 	if result == strategies.NOK {
 
-		//markup = getWaitButton()
-		markup = getWorkMap(WorkMapOne.Cells)
+		markup = getWaitButton()
+		//markup = getWorkMap(WorkMapOne.Cells)
 		text = fmt.Sprintf("%d-%d miss", x, y)
 
 	} else if result == strategies.HIT || result == strategies.DESTROYED {
@@ -204,4 +205,83 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 func DeleteMessage(chatID int64, messageID int) {
 	msg := tgbotapi.NewDeleteMessage(chatID, messageID)
 	client.Get().Client.DeleteMessage(msg)
+}
+
+// EnemyGame runs enemy shots
+func EnemyGame(chatID int64) {
+	var text, result string
+	var x, y int
+	WorkMapTwo := war_map.WarMap{}
+	WarMapOne := war_map.WarMap{}
+
+	game := GetGame(chatID)
+	chat := GetChat(chatID)
+
+	if len(game.WorkMapTwo) == 0 {
+		WorkMapTwo.Create(false)
+	} else {
+		WorkMapTwo.JsonToMap(game.WorkMapTwo)
+	}
+	WarMapOne.JsonToMap(game.WarMapOne)
+
+	str := strategies.GetStrategy(userToEnemy(game.UserIDTwo))
+	str.Create()
+
+	for {
+		text = "\n"
+
+		x, y, _ = str.GetShot(result)
+		result, WorkMapTwo.Cells = strategies.CheckShot(x, y, WorkMapTwo.Cells, WarMapOne)
+
+		text = getTextMapWithWork(text, WarMapOne.Cells, WorkMapTwo.Cells)
+
+		game.WarMapOne = WarMapOne.MapToJson()
+		game.WorkMapTwo = WorkMapTwo.MapToJson()
+		models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
+
+		if result == strategies.NOK {
+
+			text += fmt.Sprintf("\n\n%d-%d miss", x, y)
+
+		} else if result == strategies.HIT || result == strategies.DESTROYED {
+
+			if result == strategies.HIT {
+
+				text += fmt.Sprintf("\n\n%d-%d hit", x, y)
+
+			} else {
+
+				text += fmt.Sprintf("\n\n%d-%d Congratulation! Ship destroyed.", x, y)
+
+			}
+
+		} else if result == strategies.WIN {
+
+			text += fmt.Sprintf("\n\n%d-%d Win", x, y)
+
+		}
+
+		markup := getResignButton()
+		editMsg := tgbotapi.NewEditMessageText(chatID, chat.MessageID, text)
+		editMsg.ReplyMarkup = &markup
+
+		_, err := client.Get().Client.Send(editMsg)
+
+		if err != nil {
+			log.Fatalf("Listening callback message: %s", err)
+		}
+
+		if result == strategies.NOK || result == strategies.WIN {
+
+			if result == strategies.NOK {
+				returnUserGame(chatID)
+			} else {
+				DeleteMessage(chatID, game.MessageID)
+			}
+
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
 }

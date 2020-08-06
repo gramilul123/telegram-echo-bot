@@ -43,6 +43,37 @@ func getTextMap(text string, warCells [][]int) string {
 	return text
 }
 
+// getTextMapWithWork return text view of map with work results
+func getTextMapWithWork(text string, warCells [][]int, workCells [][]int) string {
+
+	for i, row := range warCells {
+		if i > 0 && i < 11 {
+			for j, cell := range row {
+				if j > 0 && j < 11 {
+					if cell == war_map.Ship {
+						if workCells[i][j] == strategies.SHIP {
+							text += "❌"
+						} else {
+							text += "⬛️"
+						}
+					} else {
+						if workCells[i][j] == strategies.HALO {
+							text += "✴️"
+						} else if workCells[i][j] == strategies.EMPTY {
+							text += "🔸"
+						} else {
+							text += "⬜️"
+						}
+					}
+				}
+			}
+			text += "\n"
+		}
+	}
+
+	return text
+}
+
 // getSelectMapInlineMarkup returns inline buttons
 func getSelectMapInlineMarkup() (markup tgbotapi.InlineKeyboardMarkup) {
 	buttonList := make(map[string]string)
@@ -222,4 +253,37 @@ func SaveWorkMessageID(chatID int64, messageID int) {
 	game := GetGame(chatID)
 	game.MessageID = messageID
 	models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
+}
+
+// returnUserGame return work keyboard
+func returnUserGame(chatID int64) {
+	WorkMapOne := war_map.WarMap{}
+
+	game := GetGame(chatID)
+	DeleteMessage(chatID, game.MessageID)
+	WorkMapOne.JsonToMap(game.WorkMapOne)
+
+	markup := getWorkMap(WorkMapOne.Cells)
+	msg := tgbotapi.NewMessage(chatID, "Your shot")
+	msg.ReplyMarkup = &markup
+
+	response, err := client.Get().Client.Send(msg)
+
+	if err != nil {
+		log.Fatalf("Listening update message: %s", err)
+	}
+
+	SaveWorkMessageID(chatID, response.MessageID)
+}
+
+// userToEnemy return text view
+func userToEnemy(user int64) (enemy string) {
+	switch user {
+	case 1:
+		enemy = strategies.SIMPLE
+	case 2:
+		enemy = strategies.MIDDLE
+	}
+
+	return
 }
