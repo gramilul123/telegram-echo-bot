@@ -125,7 +125,6 @@ func CheckStep(text string) (matched bool, x int, y int) {
 func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 	var result, text string
 	var markup tgbotapi.ReplyKeyboardMarkup
-	var editMsg tgbotapi.EditMessageTextConfig
 	WorkMapOne := war_map.WarMap{}
 	WarMapTwo := war_map.WarMap{}
 
@@ -157,11 +156,20 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 	} else if result == strategies.HIT || result == strategies.DESTROYED {
 
 		markup = getWorkMap(WorkMapOne.Cells)
-		text = fmt.Sprintf("%d-%d hit", x, y)
+
+		if result == strategies.HIT {
+
+			text = fmt.Sprintf("%d-%d hit", x, y)
+
+		} else {
+
+			text = fmt.Sprintf("%d-%d Congratulation! Ship destroyed.", x, y)
+
+		}
 
 	} else if result == strategies.WIN {
 
-		editMsg = Finish(chatID, chat.MessageID, "win")
+		editMsg := Finish(chatID, chat.MessageID, "win")
 		_, err := client.Get().Client.Send(editMsg)
 
 		if err != nil {
@@ -169,6 +177,8 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 		}
 
 		game.Status = models.Stop
+		markup = getWorkMap(WorkMapOne.Cells)
+		text = fmt.Sprintf("%d-%d Win", x, y)
 
 	} else if result == strategies.DONE {
 
@@ -180,12 +190,10 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 	game.WarMapTwo = WarMapTwo.MapToJson()
 	models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
 
-	if unsafe.Sizeof(markup) != 0 {
+	if unsafe.Sizeof(markup) != 0 && len(text) > 0 {
 
 		msg = tgbotapi.NewMessage(chat.ChatID, text)
 		msg.ReplyMarkup = &markup
-
-	} else if unsafe.Sizeof(editMsg) != 0 {
 
 	}
 
