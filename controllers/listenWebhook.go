@@ -64,11 +64,18 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 
 	} else if update.CallbackQuery != nil {
 
-		if update.CallbackQuery.Data == "select_map" {
+		if update.CallbackQuery.Data == "select_map" || update.CallbackQuery.Data == "new" {
 
 			editMsg, gameMap = actions.ReSelectMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 
 			actions.SaveMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, gameMap)
+
+			if update.CallbackQuery.Data == "new" {
+
+				game := actions.GetGame(update.CallbackQuery.Message.Chat.ID)
+				actions.DeleteMessage(update.CallbackQuery.Message.Chat.ID, game.MessageID)
+
+			}
 
 		} else if update.CallbackQuery.Data == "accept" {
 
@@ -81,12 +88,6 @@ func ListenWebhook(w http.ResponseWriter, r *http.Request) {
 		} else if update.CallbackQuery.Data == "lose" {
 
 			editMsg = actions.Finish(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Data)
-
-		} else if update.CallbackQuery.Data == "new" {
-
-			editMsg, gameMap = actions.ReSelectMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
-
-			actions.SaveMap(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, gameMap)
 
 		}
 
