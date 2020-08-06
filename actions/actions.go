@@ -135,6 +135,8 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 		return
 	}
 
+	DeleteMessage(chatID, game.MessageID)
+
 	chat := GetChat(chatID)
 
 	if len(game.WorkMapOne) == 0 {
@@ -188,4 +190,10 @@ func MakeShot(chatID int64, x int, y int) (msg tgbotapi.MessageConfig) {
 	}
 
 	return
+}
+
+// DeleteMessage delete message by message id
+func DeleteMessage(chatID int64, messageID int) {
+	msg := tgbotapi.NewDeleteMessage(chatID, messageID)
+	client.Get().Client.DeleteMessage(msg)
 }

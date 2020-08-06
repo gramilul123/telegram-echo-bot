@@ -123,7 +123,9 @@ func GetGame(ChatID int64) (game models.Game) {
 func CreateGame(ChatID int64) {
 	chat := GetChat(ChatID)
 
-	game := models.Game{
+	game := GetGame(ChatID)
+	DeleteMessage(ChatID, game.MessageID)
+	game = models.Game{
 		Status:    models.NewGame,
 		UserIDOne: ChatID,
 		WarMapOne: chat.AcceptedMap,
@@ -205,11 +207,19 @@ func sendWorkMap(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "Your shot")
 	msg.ReplyMarkup = &markup
 
-	_, err := client.Get().Client.Send(msg)
+	response, err := client.Get().Client.Send(msg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	/*removeMsg := tgbotapi.NewDeleteMessage(chatID, response.MessageID)
-	client.Get().Client.DeleteMessage(removeMsg)*/
+	game := GetGame(chatID)
+	game.MessageID = response.MessageID
+	models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
+}
+
+// SaveWorkMessageID save work message id to game table
+func SaveWorkMessageID(chatID int64, messageID int) {
+	game := GetGame(chatID)
+	game.MessageID = messageID
+	models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
 }
