@@ -30,6 +30,8 @@ const (
 type Strategy interface {
 	GetShot(result string) (int, int, [][]int)
 	Create()
+	MapToJson() string
+	JsonToMap(str string)
 }
 
 func GetStrategy(variant string) (strategy Strategy) {

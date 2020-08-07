@@ -1,6 +1,9 @@
 package strategies
 
 import (
+	"encoding/json"
+	"log"
+
 	war_map "github.com/gramilul123/telegram-echo-bot/game/war_map"
 )
 
@@ -100,4 +103,22 @@ func (s *MiddleStrategy) GetShot(result string) (int, int, [][]int) {
 	s.LastShot = war_map.Coordinate{x, y}
 
 	return x, y, s.GameWorkMap
+}
+
+func (s MiddleStrategy) MapToJson() string {
+	str, err := json.Marshal(s)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return (string(str))
+}
+
+func (s *MiddleStrategy) JsonToMap(str string) {
+	bytes := []byte(str)
+
+	if err := json.Unmarshal(bytes, &s); err != nil {
+		log.Fatal(err)
+	}
 }
