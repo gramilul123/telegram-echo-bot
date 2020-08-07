@@ -211,32 +211,31 @@ func DeleteMessage(chatID int64, messageID int) {
 func EnemyGame(chatID int64) {
 	var text, result string
 	var x, y int
-	WorkMapTwo := war_map.WarMap{}
-	WarMapOne := war_map.WarMap{}
+	var cells [][]int
 
+	WarMapOne := war_map.WarMap{}
 	game := GetGame(chatID)
 	chat := GetChat(chatID)
 
+	str := strategies.GetStrategy(userToEnemy(game.UserIDTwo))
+
 	if len(game.WorkMapTwo) == 0 {
-		WorkMapTwo.Create(false)
+		str.Create()
 	} else {
-		WorkMapTwo.JsonToMap(game.WorkMapTwo)
+		str.JsonToMap(game.WorkMapTwo)
 	}
 	WarMapOne.JsonToMap(game.WarMapOne)
 
-	str := strategies.GetStrategy(userToEnemy(game.UserIDTwo))
-	str.Create()
-
 	for {
-		text = "\n"
+		text += "\n"
 
-		x, y, _ = str.GetShot(result)
-		result, WorkMapTwo.Cells = strategies.CheckShot(x, y, WorkMapTwo.Cells, WarMapOne)
+		x, y, cells = str.GetShot(result)
+		result, cells = strategies.CheckShot(x, y, cells, WarMapOne)
 
-		text = getTextMapWithWork(text, WarMapOne.Cells, WorkMapTwo.Cells)
+		text = getTextMapWithWork(text, WarMapOne.Cells, cells)
 
 		game.WarMapOne = WarMapOne.MapToJson()
-		game.WorkMapTwo = WorkMapTwo.MapToJson()
+		game.WorkMapTwo = str.MapToJson()
 		models.GetModel(models.GAME).Update(game, "user_id_one", chatID)
 
 		if result == strategies.NOK {
